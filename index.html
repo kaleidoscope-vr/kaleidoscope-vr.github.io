@@ -434,7 +434,7 @@
 
       client
         .query("sum", {
-          event_collection: "project",
+          event_collection: "inDevelopment",
           target_property: "project.totalInvested",
           timeframe: "this_14_months"
         })
@@ -455,10 +455,9 @@
 
       client
         .query("sum", {
-          event_collection: "project",
-          target_property: "project.currentinvested",
-          timeframe: "this_14_months",
-          prefix: "$"
+          event_collection: "inDevelopment",
+          target_property: "project.currentInvested",
+          timeframe: "this_14_months"
         })
         .then(function(res) {
           console.log("res from Sum", res);
