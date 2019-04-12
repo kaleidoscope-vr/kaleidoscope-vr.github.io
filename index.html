@@ -128,7 +128,7 @@
         </div>
         <div class="chart-wrapper">
           <div class="chart-title">
-            Total money raise to now
+            Total money raised to now
           </div>
           <div class="chart-stage">
             <div id="money-rise-container"></div>
@@ -147,6 +147,28 @@
           </div>
         </div>
       </div>
+      <div class="chart-wrapper">
+        <div class="chart-title">
+          Average Raise
+        </div>
+        <div class="chart-stage">
+          <div id="average-raise"></div>
+        </div>
+        <div class="chart-notes">
+          Notes about this chart
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <div class="chart-title">
+          Average Raise
+        </div>
+        <div class="chart-stage">
+          <div id="average-budget"></div>
+        </div>
+        <div class="chart-notes">
+          Notes about this chart
+        </div>
+      </div>
       <!-- <div class="chart-wrapper">
         <div class="chart-title">
           Cell Title
@@ -158,29 +180,7 @@
           Notes about this chart
         </div>
       </div>
-      <div class="chart-wrapper">
-        <div class="chart-title">
-          Cell Title
-        </div>
-        <div class="chart-stage">
-          <img data-src="holder.js/100px120?theme=white" />
-        </div>
-        <div class="chart-notes">
-          Notes about this chart
-        </div>
-      </div>
-      <div class="chart-wrapper">
-        <div class="chart-title">
-          Cell Title
-        </div>
-        <div class="chart-stage">
-          <img data-src="holder.js/100px120?theme=white" />
-        </div>
-        <div class="chart-notes">
-          Notes about this chart
-        </div>
-      </div> -->
-      <!-- <div class="chart-wrapper" id="1">
+      <div class="chart-wrapper" id="1">
         <div class="chart-title">
           Cell Title
         </div>
@@ -466,6 +466,48 @@
         })
         .catch(function(err) {
           moneyCurrentInvested.message(err.message);
+        });
+
+      //average-raise
+      var averageRaise = new KeenDataviz({
+        container: "#average-raise",
+        type: "metric",
+        title: "Average Raise"
+      });
+
+      client
+        .query("average", {
+          event_collection: "project",
+          target_property: "project.currentinvested",
+          timeframe: "this_14_months"
+        })
+        .then(function(res) {
+          console.log("res from Sum", res);
+          averageRaise.data(res).render();
+        })
+        .catch(function(err) {
+          averageRaise.message(err.message);
+        });
+
+      //average-budget
+      var averageBuget = new KeenDataviz({
+        container: "#average-budget",
+        type: "metric",
+        title: "Average Budget"
+      });
+
+      client
+        .query("average", {
+          event_collection: "project",
+          target_property: "project.currentinvested",
+          timeframe: "this_14_months"
+        })
+        .then(function(res) {
+          console.log("res from Sum", res);
+          averageBuget.data(res).render();
+        })
+        .catch(function(err) {
+          averageBuget.message(err.message);
         });
 
       //main nav
