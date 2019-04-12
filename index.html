@@ -160,7 +160,7 @@
       </div>
       <div class="chart-wrapper">
         <div class="chart-title">
-          Average Raise
+          Average Budget
         </div>
         <div class="chart-stage">
           <div id="average-budget"></div>
@@ -477,8 +477,8 @@
 
       client
         .query("average", {
-          event_collection: "project",
-          target_property: "project.currentinvested",
+          event_collection: "inDevelopment",
+          target_property: "project.currentInvested",
           timeframe: "this_14_months"
         })
         .then(function(res) {
@@ -498,8 +498,8 @@
 
       client
         .query("average", {
-          event_collection: "project",
-          target_property: "project.currentinvested",
+          event_collection: "inDevelopment",
+          target_property: "project.totalInvested",
           timeframe: "this_14_months"
         })
         .then(function(res) {
