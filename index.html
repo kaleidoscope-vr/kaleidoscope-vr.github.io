@@ -95,7 +95,7 @@
         </div>
         <div class="chart-wrapper">
           <div class="chart-title">
-            Total Users
+            Total Users ( Claimed accounts)
           </div>
           <div class="chart-stage">
             <div id="approved-user"></div>
@@ -137,7 +137,7 @@
             ...
           </div>
           <div class="chart-title">
-            Current Invested
+            Current Budget
           </div>
           <div class="chart-stage">
             <div id="money-totalInvested-container"></div>
@@ -181,61 +181,40 @@
           ...
         </div>
       </div>
-      <div class="chart-wrapper">
-        <div class="chart-title">
-          Weekly Active Users
+
+      <div class="grid-hero">
+        <div class="hero chart-wrapper">
+          <div class="chart-title">
+            Project Publishing Funnel
+          </div>
+          <div class="chart-stage">
+            <div style="height: 450px"></div>
+          </div>
+          <div class="chart-notes">
+            ...
+          </div>
         </div>
-        <div class="chart-stage">
-          <div id="weekly-active-users"></div>
-        </div>
-        <div class="chart-notes">
-          ...
-        </div>
-      </div>
-      <div class="chart-wrapper">
-        <div class="chart-title">
-          Average Budget
-        </div>
-        <div class="chart-stage">
-          <div></div>
-        </div>
-        <div class="chart-notes">
-          Notes about this chart
-        </div>
-      </div>
-      <!-- <div class="chart-wrapper" id="1">
-        <div class="chart-title">
-          Cell Title
-        </div>
-        <div class="chart-stage">
-          <img data-src="holder.js/100px120?theme=white" />
-        </div>
-        <div class="chart-notes">
-          Notes about this chart
-        </div>
-      </div>
-   <div class="chart-wrapper">
-        <div class="chart-title">
-          Cell Title
-        </div>
-        <div class="chart-stage">
-          <img data-src="holder.js/100px120?theme=white" />
-        </div>
-        <div class="chart-notes">
-          Notes about this chart
+        <div class="chart-wrapper">
+          <div class="chart-title">
+            Average Budget
+          </div>
+          <div class="chart-stage">
+            <div></div>
+          </div>
+          <div class="chart-notes">
+            Notes about this chart
+          </div>
+          <div class="chart-title">
+            Current Invested
+          </div>
+          <div class="chart-stage">
+            <div></div>
+          </div>
+          <div class="chart-notes">
+            ...
+          </div>
         </div>
       </div>
-      <div class="chart-wrapper">
-        <div class="chart-title">
-          Cell Title
-        </div>
-        <div class="chart-stage">
-          <img data-src="holder.js/100px120?theme=white" />
-        </div>
-        <div class="chart-notes">
-          Notes about this chart
-        </div>
-      </div> -->
     </div>
 
     <div class="container">
@@ -377,8 +356,6 @@
           }
 
           Promise.all(result).then(function(values) {
-            console.log("values", values);
-
             //check if user has more than one session
             for (let i = 0; i < values.length; i++) {
               if (values.result > 3) {
@@ -471,7 +448,6 @@
           if (error) {
             moneyRise.message(error.message);
           } else {
-            console.log("res[0].result", res[0].result);
             var result = Math.floor(res[0].result + res[1].result);
             var average = {
               query: res[0].query,
@@ -487,7 +463,7 @@
       var totalInvestedGraph = new KeenDataviz({
         container: "#money-totalInvested-container",
         type: "metric",
-        title: "Current Invested",
+        title: "Total Budget",
         prefix: "$"
       });
 
@@ -509,7 +485,6 @@
           if (error) {
             totalInvestedGraph.message(error.message);
           } else {
-            console.log("res[0].result", res[0].result);
             var result = Math.floor(res[0].result + res[1].result);
             var average = {
               query: res[0].query,
@@ -582,8 +557,6 @@
         error,
         res
       ) {
-        console.log("error here", error);
-        console.log("res here", res);
         if (error) {
           averageBuget.message(error.message);
         } else {
@@ -592,7 +565,7 @@
             query: res[0].query,
             result: result
           };
-          console.log("res[0]", res);
+
           averageBuget.data(average).render();
         }
       });
@@ -605,13 +578,14 @@
       });
 
       client
-        .query("count_unique", {
+        .query("count", {
           eventCollection: "session",
           targetProperty: "user.id",
-          timeframe: "this_1_days",
+          timeframe: "this_7_days",
           interval: "daily"
         })
         .then(function(res) {
+          console.log("user.id res", res);
           dailyActiveUsers.data(res).render();
         })
         .catch(function(error) {
@@ -629,10 +603,10 @@
         .query("count_unique", {
           eventCollection: "session",
           targetProperty: "user.id",
-          timeframe: "this_1_months"
+          timeframe: "this_7_days"
         })
         .then(function(res) {
-          console.log("res", res);
+          console.log("another result res", res);
           weeklyActiveUsers.data(res).render();
         })
         .catch(function(error) {
