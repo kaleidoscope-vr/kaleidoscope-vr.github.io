@@ -140,7 +140,7 @@
             Current Invested
           </div>
           <div class="chart-stage">
-            <div id="money-currentinvested-container"></div>
+            <div id="money-totalInvested-container"></div>
           </div>
           <div class="chart-notes">
             ...
@@ -169,29 +169,52 @@
           Notes about this chart
         </div>
       </div>
-      <!-- <div class="chart-wrapper">
+      <div class="chart-wrapper" style="width: 370px; height: 228px"></div>
+      <div class="chart-wrapper">
         <div class="chart-title">
-          Cell Title
+          Daily Active Users
         </div>
         <div class="chart-stage">
-          <img data-src="holder.js/100px120?theme=white" />
+          <div id="daily-active-users"></div>
         </div>
         <div class="chart-notes">
-          Notes about this chart
-        </div>
-      </div>
-      <div class="chart-wrapper" id="1">
-        <div class="chart-title">
-          Cell Title
-        </div>
-        <div class="chart-stage">
-          <img data-src="holder.js/100px120?theme=white" />
-        </div>
-        <div class="chart-notes">
-          Notes about this chart
+          ...
         </div>
       </div>
       <div class="chart-wrapper">
+        <div class="chart-title">
+          Weekly Active Users
+        </div>
+        <div class="chart-stage">
+          <div id="weekly-active-users"></div>
+        </div>
+        <div class="chart-notes">
+          ...
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <div class="chart-title">
+          Average Budget
+        </div>
+        <div class="chart-stage">
+          <div></div>
+        </div>
+        <div class="chart-notes">
+          Notes about this chart
+        </div>
+      </div>
+      <!-- <div class="chart-wrapper" id="1">
+        <div class="chart-title">
+          Cell Title
+        </div>
+        <div class="chart-stage">
+          <img data-src="holder.js/100px120?theme=white" />
+        </div>
+        <div class="chart-notes">
+          Notes about this chart
+        </div>
+      </div>
+   <div class="chart-wrapper">
         <div class="chart-title">
           Cell Title
         </div>
@@ -259,7 +282,6 @@
           timeframe: "this_14_months"
         })
         .then(function(res) {
-          console.log("res", res);
           approvedUser.data(res).render();
         })
         .catch(function(err) {
@@ -282,7 +304,6 @@
           timeframe: "this_14_months"
         })
         .then(function(res) {
-          console.log("res", res);
           uniqueVisitors.data(res).render();
         })
         .catch(function(err) {
@@ -338,10 +359,9 @@
         })
         .then(function(funnelRes) {
           let _funnelRes = funnelRes;
-          console.log(_funnelRes.actors[3]);
+
           let result = [];
           for (let i = 0; i < _funnelRes.actors[3].length; i++) {
-            console.log("goes here");
             result[i] = client.query("count", {
               eventCollection: "session",
               targetProperty: "user.id",
@@ -433,41 +453,73 @@
         prefix: "$"
       });
 
-      client
-        .query("sum", {
-          event_collection: "inDevelopment",
-          target_property: "project.totalInvested",
-          timeframe: "this_14_months"
-        })
-        .then(function(res) {
-          console.log("res from Sum", res);
-          moneyRise.data(res).render();
-        })
-        .catch(function(err) {
-          moneyRise.message(err.message);
-        });
+      var moneyCurrentInvestedInDevelopement = new Keen.Query("sum", {
+        event_collection: "inDevelopment",
+        target_property: "project.currentInvested",
+        timeframe: "this_14_months"
+      });
 
-      //current number of users
-      var moneyCurrentInvested = new KeenDataviz({
-        container: "#money-currentinvested-container",
+      var moneyCurrentInvestedComplete = new Keen.Query("sum", {
+        event_collection: "complete",
+        target_property: "project.currentInvested",
+        timeframe: "this_14_months"
+      });
+
+      client.run(
+        [moneyCurrentInvestedInDevelopement, moneyCurrentInvestedComplete],
+        function(error, res) {
+          if (error) {
+            moneyRise.message(error.message);
+          } else {
+            console.log("res[0].result", res[0].result);
+            var result = Math.floor(res[0].result + res[1].result);
+            var average = {
+              query: res[0].query,
+              result: result
+            };
+
+            moneyRise.data(average).render();
+          }
+        }
+      );
+
+      //current invested
+      var totalInvestedGraph = new KeenDataviz({
+        container: "#money-totalInvested-container",
         type: "metric",
-        title: "Invested money",
+        title: "Current Invested",
         prefix: "$"
       });
 
-      client
-        .query("sum", {
-          event_collection: "inDevelopment",
-          target_property: "project.currentInvested",
-          timeframe: "this_14_months"
-        })
-        .then(function(res) {
-          console.log("res from Sum", res);
-          moneyCurrentInvested.data(res).render();
-        })
-        .catch(function(err) {
-          moneyCurrentInvested.message(err.message);
-        });
+      var moneyTotalInvestedInDevelopement = new Keen.Query("sum", {
+        event_collection: "inDevelopment",
+        target_property: "project.totalInvested",
+        timeframe: "this_14_months"
+      });
+
+      var moneyTotalInvestedComplete = new Keen.Query("sum", {
+        event_collection: "complete",
+        target_property: "project.totalInvested",
+        timeframe: "this_14_months"
+      });
+
+      client.run(
+        [moneyTotalInvestedInDevelopement, moneyTotalInvestedComplete],
+        function(error, res) {
+          if (error) {
+            totalInvestedGraph.message(error.message);
+          } else {
+            console.log("res[0].result", res[0].result);
+            var result = Math.floor(res[0].result + res[1].result);
+            var average = {
+              query: res[0].query,
+              result: result
+            };
+
+            totalInvestedGraph.data(average).render();
+          }
+        }
+      );
 
       //average-raise
       var averageRaise = new KeenDataviz({
@@ -477,19 +529,34 @@
         prefix: "$"
       });
 
-      client
-        .query("average", {
-          event_collection: "inDevelopment",
-          target_property: "project.currentInvested",
-          timeframe: "this_14_months"
-        })
-        .then(function(res) {
-          console.log("res from Sum", res);
-          averageRaise.data(res).render();
-        })
-        .catch(function(err) {
-          averageRaise.message(err.message);
-        });
+      var deliveredMetricInDevelopment = new Keen.Query("average", {
+        eventCollection: "inDevelopment",
+        targetProperty: "project.currentInvested",
+        timeframe: "this_14_months"
+      });
+
+      var deliveredMetricComplete = new Keen.Query("average", {
+        eventCollection: "completed",
+        targetProperty: "project.currentInvested",
+        timeframe: "this_14_months"
+      });
+
+      client.run(
+        [deliveredMetricInDevelopment, deliveredMetricComplete],
+        function(error, res) {
+          if (error) {
+            averageRaise.message(error.message);
+          } else {
+            var result = Math.floor((res[0].result + res[1].result) / 2);
+            var average = {
+              query: res[0].query,
+              result: result
+            };
+
+            averageRaise.data(average).render();
+          }
+        }
+      );
 
       //average-budget
       var averageBuget = new KeenDataviz({
@@ -499,18 +566,77 @@
         prefix: "$"
       });
 
+      var currentMetricInDevelopment = new Keen.Query("average", {
+        eventCollection: "inDevelopment",
+        targetProperty: "project.totalInvested",
+        timeframe: "this_14_months"
+      });
+
+      var currenMetricComplete = new Keen.Query("average", {
+        event_collection: "completed",
+        target_property: "project.totalInvested",
+        timeframe: "this_14_months"
+      });
+
+      client.run([currentMetricInDevelopment, currenMetricComplete], function(
+        error,
+        res
+      ) {
+        console.log("error here", error);
+        console.log("res here", res);
+        if (error) {
+          averageBuget.message(error.message);
+        } else {
+          var result = Math.floor((res[0].result + res[1].result) / 2);
+          var average = {
+            query: res[0].query,
+            result: result
+          };
+          console.log("res[0]", res);
+          averageBuget.data(average).render();
+        }
+      });
+
+      //activate users
+      var dailyActiveUsers = new KeenDataviz({
+        container: "#daily-active-users",
+        type: "metric",
+        title: "Daily Active Users"
+      });
+
       client
-        .query("average", {
-          event_collection: "inDevelopment",
-          target_property: "project.totalInvested",
-          timeframe: "this_14_months"
+        .query("count_unique", {
+          eventCollection: "session",
+          targetProperty: "user.id",
+          timeframe: "this_1_days",
+          interval: "daily"
         })
         .then(function(res) {
-          console.log("res from Sum", res);
-          averageBuget.data(res).render();
+          dailyActiveUsers.data(res).render();
         })
-        .catch(function(err) {
-          averageBuget.message(err.message);
+        .catch(function(error) {
+          dailyActiveUsers.message(error);
+        });
+
+      //activate users
+      var weeklyActiveUsers = new KeenDataviz({
+        container: "#weekly-active-users",
+        type: "metric",
+        title: "Montly Active Users"
+      });
+
+      client
+        .query("count_unique", {
+          eventCollection: "session",
+          targetProperty: "user.id",
+          timeframe: "this_1_months"
+        })
+        .then(function(res) {
+          console.log("res", res);
+          weeklyActiveUsers.data(res).render();
+        })
+        .catch(function(error) {
+          weeklyActiveUsers.message(error);
         });
 
       //main nav
