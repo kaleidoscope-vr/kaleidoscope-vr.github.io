@@ -137,7 +137,7 @@
             ...
           </div>
           <div class="chart-title">
-            Current Budget
+            Total Projects Budget
           </div>
           <div class="chart-stage">
             <div id="money-totalInvested-container"></div>
@@ -170,25 +170,14 @@
         </div>
       </div>
       <div class="chart-wrapper" style="width: 370px; height: 228px"></div>
-      <div class="chart-wrapper">
-        <div class="chart-title">
-          Daily Active Users
-        </div>
-        <div class="chart-stage">
-          <div id="daily-active-users"></div>
-        </div>
-        <div class="chart-notes">
-          ...
-        </div>
-      </div>
 
       <div class="grid-hero">
         <div class="hero chart-wrapper">
           <div class="chart-title">
-            Project Publishing Funnel
+            Average Active Users from accounts approved 21,14 and 7 days ago
           </div>
           <div class="chart-stage">
-            <div style="height: 450px"></div>
+            <div style="height: 450px" id="convertion-chart"></div>
           </div>
           <div class="chart-notes">
             ...
@@ -196,23 +185,25 @@
         </div>
         <div class="chart-wrapper">
           <div class="chart-title">
-            Average Budget
+            Daily Average Active Users
           </div>
           <div class="chart-stage">
-            <div></div>
-          </div>
-          <div class="chart-notes">
-            Notes about this chart
-          </div>
-          <div class="chart-title">
-            Current Invested
-          </div>
-          <div class="chart-stage">
-            <div></div>
+            <div id="daily-active-users"></div>
           </div>
           <div class="chart-notes">
             ...
           </div>
+          <div class="chart-title">
+            Daily average of active user who sent email
+          </div>
+          <div class="chart-stage">
+            <div id="daily-active-users-who-sendt-email"></div>
+          </div>
+          <div class="chart-notes">
+            ...
+          </div>
+
+          <div class="chart-wrapper" style="width: 370px; height: 228px"></div>
         </div>
       </div>
     </div>
@@ -297,7 +288,7 @@
         showLoadingSpinner: true,
         type: "funnel",
         labelMapping: {
-          reviewing: "Reviewing",
+          create: "Reviewing",
           accepted: "Accepted (upvoted)",
           approved: "Approved (Confirm data)",
           session: "Activated"
@@ -400,6 +391,7 @@
               event_collection: "draft",
               timeframe: "this_14_months"
             },
+
             {
               actor_property: "project.id",
               event_collection: "inDevelopment",
@@ -415,6 +407,7 @@
           ]
         })
         .then(function(funnelRes) {
+          console.log(funnelRes);
           projectPublishingFunnel.render(funnelRes);
         })
         .catch(function(err) {
@@ -463,7 +456,7 @@
       var totalInvestedGraph = new KeenDataviz({
         container: "#money-totalInvested-container",
         type: "metric",
-        title: "Total Budget",
+        title: "-",
         prefix: "$"
       });
 
@@ -574,44 +567,164 @@
       var dailyActiveUsers = new KeenDataviz({
         container: "#daily-active-users",
         type: "metric",
-        title: "Daily Active Users"
+        title: "Daily Active Users",
+        suffix: "%"
       });
 
       client
-        .query("count", {
-          eventCollection: "session",
-          targetProperty: "user.id",
-          timeframe: "this_7_days",
-          interval: "daily"
+        .query({
+          analysis_type: "funnel",
+          steps: [
+            {
+              actor_property: "user.id",
+              event_collection: "approved",
+              timeframe: "this_12_months",
+              with_actors: true
+            },
+            {
+              actor_property: "user.id",
+              event_collection: "session",
+              timeframe: "this_1_days",
+              with_actors: true
+            }
+          ]
         })
         .then(function(res) {
-          console.log("user.id res", res);
-          dailyActiveUsers.data(res).render();
+          const currentActiveUsers = (res.result[1] / res.result[0]) * 100;
+          console.log("dailyActiveUsers", res);
+          dailyActiveUsers
+            .parseRawData({ result: currentActiveUsers })
+            .render();
         })
-        .catch(function(error) {
-          dailyActiveUsers.message(error);
+        .catch(function(e) {
+          console.log("daily-active-users");
         });
 
-      //activate users
-      var weeklyActiveUsers = new KeenDataviz({
-        container: "#weekly-active-users",
+      //activate users sending emails
+      var dailyEmailByActiveUsers = new KeenDataviz({
+        container: "#daily-active-users-who-sendt-email",
         type: "metric",
-        title: "Montly Active Users"
+        title: "Daily Active Users",
+        suffix: "%"
       });
 
       client
-        .query("count_unique", {
-          eventCollection: "session",
-          targetProperty: "user.id",
-          timeframe: "this_7_days"
+        .query({
+          analysis_type: "funnel",
+          steps: [
+            {
+              actor_property: "user.id",
+              event_collection: "session",
+              timeframe: "this_12_months",
+              with_actors: true
+            },
+            {
+              event_collection: "chat",
+              actor_property: "user.id",
+              timeframe: "this_1_days",
+              with_actors: true
+            }
+          ]
         })
         .then(function(res) {
-          console.log("another result res", res);
-          weeklyActiveUsers.data(res).render();
+          const currentActiveUsers = (res.result[1] / res.result[0]) * 100;
+
+          dailyEmailByActiveUsers
+            .parseRawData({ result: currentActiveUsers })
+            .render();
         })
-        .catch(function(error) {
-          weeklyActiveUsers.message(error);
+        .catch(function(e) {
+          console.log("daily-active-users");
         });
+
+      //
+
+      var convertion1week = new Keen.Query("funnel", {
+        steps: [
+          {
+            actor_property: "user.id",
+            event_collection: "approved",
+            timeframe: "this_7_days"
+          },
+          {
+            actor_property: "user.id",
+            event_collection: "session",
+            timeframe: "this_7_days"
+          }
+        ]
+      });
+
+      var convertion14_days = new Keen.Query("funnel", {
+        steps: [
+          {
+            actor_property: "user.id",
+            event_collection: "approved",
+            timeframe: "this_14_days"
+          },
+          {
+            actor_property: "user.id",
+            event_collection: "session",
+            timeframe: "this_14_days"
+          }
+        ]
+      });
+
+      var convertion21_days = new Keen.Query("funnel", {
+        steps: [
+          {
+            actor_property: "user.id",
+            event_collection: "approved",
+            timeframe: "this_21_days"
+          },
+          {
+            actor_property: "user.id",
+            event_collection: "session",
+            timeframe: "this_21_days"
+          }
+        ]
+      });
+
+      function getPorcent(arrayData) {
+        var arrayLabels = ["21 days", "14 days", "7 days"];
+        var columns = [];
+        for (var i = 0; i < arrayData.length; i++) {
+          var temArray = [];
+          temArray[0] = arrayLabels[i];
+          temArray.push(
+            (arrayData[i].result[1] / arrayData[i].result[0]) * 100
+          );
+
+          columns.push(temArray);
+        }
+
+        return columns;
+      }
+
+      const convertionChart = new KeenDataviz({
+        container: "#convertion-chart",
+        type: "bar",
+        renderOnVisible: true,
+        palette: "modern"
+      });
+
+      client.run(
+        [convertion21_days, convertion14_days, convertion1week],
+        function(error, res) {
+          if (error) {
+            // console.log("error", getPorcent(res));
+            // averageBuget.message(error.message);
+          } else {
+            // console.log(getPorcent(res));
+            convertionChart.parseRawData({ result: getPorcent(res) }).render();
+            // var result = Math.floor((res[0].result + res[1].result) / 2);
+            // var average = {
+            //   query: res[0].query,
+            //   result: result
+            // };
+            // averageBuget.data(average).render();
+          }
+        }
+      );
 
       //main nav
       function toggleMenu() {
